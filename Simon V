@@ -1,0 +1,555 @@
+module Simon(SW, KEY, LEDR, LEDG, HEX0, HEX1, HEX2, HEX3, HEX4, HEX5, HEX6, HEX7, CLOCK_50);
+
+    input [17:0] SW;
+    input [3:0] KEY;
+    input CLOCK_50;
+    output [17:0] LEDR;
+    output [7:0] LEDG;
+    output [6:0] HEX0, HEX1, HEX2, HEX3, HEX4, HEX5, HEX6, HEX7;
+
+    reg [7:0] seq;
+    reg [7:0] inpt;
+    reg [2:0] cs, ns;
+    reg [7:0] score = 8'b00000000;
+    reg [7:0] wires;
+    
+    assign LEDG = wires;
+
+    localparam A = 3'b000, B = 3'b001, C = 3'b010, D = 3'b011, E = 3'b100, F = 3'b101, G = 3'b110, H = 3'b111;
+    
+    
+//    always@(score) //*
+//        begin
+    hex_decoder h1(.hex_digit(score[7:4]), .segments(HEX7));
+    hex_decoder h2(.hex_digit(score[3:0]), .segments(HEX6));
+//        end
+
+    // Display SIMON
+    hex_custom1 h7(.hex_digit(4'h5), .segments(HEX5));
+    hex_custom1 h8(.hex_digit(4'h2), .segments(HEX4));
+    hex_custom1 h3(.hex_digit(4'h7), .segments(HEX3));
+    hex_decoder h4(.hex_digit(4'h7), .segments(HEX2));
+    hex_custom1 h5(.hex_digit(4'h6), .segments(HEX1));
+    hex_custom1 h6(.hex_digit(4'h7), .segments(HEX0));
+            
+assign start = SW[0];
+assign clock = SW[17];
+//    assign k0 = KEY[0];
+//    assign k1 = KEY[1];
+//    assign k2 = KEY[2];
+//    assign k3 = KEY[3];
+//    
+//   wire realClock;
+//    reg clock = 1'b0;
+//   assign realClock = CLOCK_50;
+//
+//    // Modifying the clock
+//    reg [15:0] counter = 16'b0000000000000000;
+//    always@(posedge realClock)
+//        begin
+//            if (counter <= 16'b1100001101010000 && counter > 16'b0110000110101000)
+//                begin
+//                    clock = 1'b1;
+//                    counter = 16'b0000000000000000;
+//                end
+//            else if (counter >= 16'b000000000000000000 && counter <= 16'b0110000110101000)
+//                begin
+//                    clock = 1'b0;
+//                end
+//            counter = counter + 1;
+//        end
+//    
+//    assign LEDR[17] = clock;
+    
+    always@(*)
+        begin: state_table
+            case (cs)
+                A: begin    
+                    ns <= B;
+                end
+               B: begin
+                    ns <= C;
+            end
+               C: begin
+                    ns <= D;
+                end
+               D: begin
+                    ns <= E;
+            end
+            E: begin
+                    ns <= F;
+            end
+            F: begin
+                    ns <= G;
+            end
+            G: begin
+                    ns <= H;
+            end
+            default: ns = A;
+            endcase
+        end
+
+    // State Registers
+    always @(posedge clock)
+        begin
+        if (start)
+            begin
+            // State of lighting up
+            if(cs == A)
+                begin
+            // Generating random sequence
+                seq = 8'b00011011;
+                if(seq[7:6] == 2'b00)
+                    begin
+                    wires[7] = 1'b1;
+                    wires[6] = 1'b1;
+                    wires[5] = 1'b0;
+                    wires[4] = 1'b0;
+                    wires[3] = 1'b0;
+                    wires[2] = 1'b0;
+                    wires[1] = 1'b0;
+                    wires[0] = 1'b0;
+                    end
+                else if(seq[7:6] == 2'b01)
+                    begin
+                    wires[7] = 1'b0;
+                    wires[6] = 1'b0;
+                    wires[5] = 1'b1;
+                    wires[4] = 1'b1;
+                    wires[3] = 1'b0;
+                    wires[2] = 1'b0;
+                    wires[1] = 1'b0;
+                    wires[0] = 1'b0;
+                    end
+                else if(seq[7:6] == 2'b10)
+                    begin
+                    wires[7] = 1'b0;
+                    wires[6] = 1'b0;
+                    wires[5] = 1'b0;
+                    wires[4] = 1'b0;
+                    wires[3] = 1'b1;
+                    wires[2] = 1'b1;
+                    wires[1] = 1'b0;
+                    wires[0] = 1'b0;
+                    end
+                else if(seq[7:6] == 2'b11)
+                    begin
+                    wires[7] = 1'b0;
+                    wires[6] = 1'b0;
+                    wires[5] = 1'b0;
+                    wires[4] = 1'b0;
+                    wires[3] = 1'b0;
+                    wires[2] = 1'b0;
+                    wires[1] = 1'b1;
+                    wires[0] = 1'b1;
+                end
+                cs <= ns;
+                end
+            else if(cs == B)
+                begin
+                if(seq[5:4] == 2'b00)
+                    begin
+                    wires[7] = 1'b1;
+                    wires[6] = 1'b1;
+                    wires[5] = 1'b0;
+                    wires[4] = 1'b0;
+                    wires[3] = 1'b0;
+                    wires[2] = 1'b0;
+                    wires[1] = 1'b0;
+                    wires[0] = 1'b0;
+                    end
+                else if(seq[5:4] == 2'b01)
+                    begin
+                    wires[7] = 1'b0;
+                    wires[6] = 1'b0;
+                    wires[5] = 1'b1;
+                    wires[4] = 1'b1;
+                    wires[3] = 1'b0;
+                    wires[2] = 1'b0;
+                    wires[1] = 1'b0;
+                    wires[0] = 1'b0;
+                    end
+                else if(seq[5:4] == 2'b10)
+                    begin
+                    wires[7] = 1'b0;
+                    wires[6] = 1'b0;
+                    wires[5] = 1'b0;
+                    wires[4] = 1'b0;
+                    wires[3] = 1'b1;
+                    wires[2] = 1'b1;
+                    wires[1] = 1'b0;
+                    wires[0] = 1'b0;
+                    end
+                else if(seq[5:4] == 2'b11)
+                    begin
+                    wires[7] = 1'b0;
+                    wires[6] = 1'b0;
+                    wires[5] = 1'b0;
+                    wires[4] = 1'b0;
+                    wires[3] = 1'b0;
+                    wires[2] = 1'b0;
+                    wires[1] = 1'b1;
+                    wires[0] = 1'b1;
+                    end
+                cs <= ns;
+                end
+            else if(cs == C)
+                begin
+                if(seq[3:2] == 2'b00)
+                    begin
+                    wires[7] = 1'b1;
+                    wires[6] = 1'b1;
+                    wires[5] = 1'b0;
+                    wires[4] = 1'b0;
+                    wires[3] = 1'b0;
+                    wires[2] = 1'b0;
+                    wires[1] = 1'b0;
+                    wires[0] = 1'b0;
+                    end
+                else if(seq[3:2] == 2'b01)
+                    begin
+                    wires[7] = 1'b0;
+                    wires[6] = 1'b0;
+                    wires[5] = 1'b1;
+                    wires[4] = 1'b1;
+                    wires[3] = 1'b0;
+                    wires[2] = 1'b0;
+                    wires[1] = 1'b0;
+                    wires[0] = 1'b0;
+                    end
+                else if(seq[3:2] == 2'b10)
+                    begin
+                    wires[7] = 1'b0;
+                    wires[6] = 1'b0;
+                    wires[5] = 1'b0;
+                    wires[4] = 1'b0;
+                    wires[3] = 1'b1;
+                    wires[2] = 1'b1;
+                    wires[1] = 1'b0;
+                    wires[0] = 1'b0;
+                    end
+                else if(seq[3:2] == 2'b11)
+                    begin
+                    wires[7] = 1'b0;
+                    wires[6] = 1'b0;
+                    wires[5] = 1'b0;
+                    wires[4] = 1'b0;
+                    wires[3] = 1'b0;
+                    wires[2] = 1'b0;
+                    wires[1] = 1'b1;
+                    wires[0] = 1'b1;
+                    end
+                cs <= ns;
+                end
+            else if(cs == D)
+                begin
+                if(seq[1:0] == 2'b00)
+                    begin
+                    wires[7] = 1'b1;
+                    wires[6] = 1'b1;
+                    wires[5] = 1'b0;
+                    wires[4] = 1'b0;
+                    wires[3] = 1'b0;
+                    wires[2] = 1'b0;
+                    wires[1] = 1'b0;
+                    wires[0] = 1'b0;
+                    end
+                else if(seq[1:0] == 2'b01)
+                    begin
+                    wires[7] = 1'b0;
+                    wires[6] = 1'b0;
+                    wires[5] = 1'b1;
+                    wires[4] = 1'b1;
+                    wires[3] = 1'b0;
+                    wires[2] = 1'b0;
+                    wires[1] = 1'b0;
+                    wires[0] = 1'b0;
+                    end
+                else if(seq[1:0] == 2'b10)
+                    begin
+                    wires[7] = 1'b0;
+                    wires[6] = 1'b0;
+                    wires[5] = 1'b0;
+                    wires[4] = 1'b0;
+                    wires[3] = 1'b1;
+                    wires[2] = 1'b1;
+                    wires[1] = 1'b0;
+                    wires[0] = 1'b0;
+                    end
+                else if(seq[1:0] == 2'b11)
+                    begin
+                    wires[7] = 1'b0;
+                    wires[6] = 1'b0;
+                    wires[5] = 1'b0;
+                    wires[4] = 1'b0;
+                    wires[3] = 1'b0;
+                    wires[2] = 1'b0;
+                    wires[1] = 1'b1;
+                    wires[0] = 1'b1;
+                    end
+                cs <= ns;
+                end
+            else if(cs == E)
+                begin
+                wires[7] = 1'b0;
+                wires[6] = 1'b0;
+                wires[5] = 1'b1;
+                wires[4] = 1'b1;
+                wires[3] = 1'b1;
+                wires[2] = 1'b1;
+                wires[1] = 1'b1;
+                wires[0] = 1'b1;
+                if (~KEY[3])
+                    begin
+                    inpt[7:6] <= 2'b00;
+                    cs <= ns;
+                    end
+                else if (~KEY[2])
+                    begin
+                    inpt[7:6] <= 2'b01;
+                    cs <= ns;
+                    end
+                else if (~KEY[1])
+                    begin
+                    inpt[7:6] <= 2'b10;
+                    cs <= ns;
+                    end
+                else if (~KEY[0])
+                    begin
+                    inpt[7:6] <= 2'b11;
+                    cs <= ns;
+                    end
+                end
+            else if (cs == F)
+                begin
+                wires[7] = 1'b1;
+                wires[6] = 1'b1;
+                wires[5] = 1'b0;
+                wires[4] = 1'b0;
+                wires[3] = 1'b1;
+                wires[2] = 1'b1;
+                wires[1] = 1'b1;
+                wires[0] = 1'b1;
+                if (~KEY[3])
+                    begin
+                    inpt[5:4] <= 2'b00;
+                    cs <= ns;
+                    end
+                else if (~KEY[2])
+                    begin
+                    inpt[5:4] <= 2'b01;
+                    cs <= ns;
+                    end
+                else if (~KEY[1])
+                    begin
+                    inpt[5:4] <= 2'b10;
+                    cs <= ns;
+                    end
+                else if (~KEY[0])
+                    begin
+                    inpt[5:4] <= 2'b11;
+                    cs <= ns;
+                    end
+                end
+            else if (cs == G)
+                begin
+                wires[7] = 1'b1;
+                wires[6] = 1'b1;
+                wires[5] = 1'b1;
+                wires[4] = 1'b1;
+                wires[3] = 1'b0;
+                wires[2] = 1'b0;
+                wires[1] = 1'b1;
+                wires[0] = 1'b1;
+                if (~KEY[3])
+                    begin
+                    inpt[3:2] <= 2'b00;
+                    cs <= ns;
+                    end
+                else if (~KEY[2])
+                    begin
+                    inpt[3:2] <= 2'b01;
+                    cs <= ns;
+                    end
+                else if (~KEY[1])
+                    begin
+                    inpt[3:2] <= 2'b10;
+                    cs <= ns;
+                    end
+                else if (~KEY[0])
+                    begin
+                    inpt[3:2] <= 2'b11;
+                    cs <= ns;
+                    end
+                end
+            else if (cs == H)
+                begin
+                wires[7] = 1'b1;
+                wires[6] = 1'b1;
+                wires[5] = 1'b1;
+                wires[4] = 1'b1;
+                wires[3] = 1'b1;
+                wires[2] = 1'b1;
+                wires[1] = 1'b0;
+                wires[0] = 1'b0;
+                if (~KEY[3])
+                    begin
+                    inpt[1:0] <= 2'b00;
+                    if(inpt == seq)
+                        score <= score + 1;
+                        // Display pass
+//                        hex_custom1 h1(.hex_digit(4'h4), .segments(HEX3));
+//                        hex_custom1 h2(.hex_digit(4'h1), .segments(HEX2));
+//                        hex_custom1 h3(.hex_digit(4'h5), .segments(HEX1));
+//                        hex_custom1 h4(.hex_digit(4'h5), .segments(HEX0));
+//                        // Blank for other HEX
+//                        hex_custom1 h7(.hex_digit(4'h8), .segments(HEX5));
+//                        hex_custom1 h8(.hex_digit(4'h8), .segments(HEX4));
+                        // Increment clock
+                    else
+                        score <= 8'b00000000;
+                        // Display fail
+//                        hex_custom1 h1(.hex_digit(4'h0), .segments(HEX3));
+//                        hex_custom1 h2(.hex_digit(4'h1), .segments(HEX2));
+//                        hex_custom1 h3(.hex_digit(4'h2), .segments(HEX1));
+//                        hex_custom1 h4(.hex_digit(4'h3), .segments(HEX0));
+//                        // Blank for other HEX
+//                        hex_custom1 h7(.hex_digit(4'h8), .segments(HEX5));
+//                        hex_custom1 h8(.hex_digit(4'h8), .segments(HEX4));
+                        // Reset clock
+                    cs <= ns;
+                    end
+                else if (~KEY[2])
+                    begin
+                    inpt[1:0] <= 2'b01;
+                    if(inpt == seq)
+                        score <= score + 1;
+                        // Display pass
+//                        hex_custom1 h1(.hex_digit(4'h4), .segments(HEX3));
+//                        hex_custom1 h2(.hex_digit(4'h1), .segments(HEX2));
+//                        hex_custom1 h3(.hex_digit(4'h5), .segments(HEX1));
+//                        hex_custom1 h4(.hex_digit(4'h5), .segments(HEX0));
+//                        // Blank for other HEX
+//                        hex_custom1 h7(.hex_digit(4'h8), .segments(HEX5));
+//                        hex_custom1 h8(.hex_digit(4'h8), .segments(HEX4));
+                        // Increment clock
+                    else
+                        score <= 8'b00000000;
+                        // Display fail
+//                        hex_custom1 h1(.hex_digit(4'h0), .segments(HEX3));
+//                        hex_custom1 h2(.hex_digit(4'h1), .segments(HEX2));
+//                        hex_custom1 h3(.hex_digit(4'h2), .segments(HEX1));
+//                        hex_custom1 h4(.hex_digit(4'h3), .segments(HEX0));
+//                        // Blank for other HEX
+//                        hex_custom1 h7(.hex_digit(4'h8), .segments(HEX5));
+//                        hex_custom1 h8(.hex_digit(4'h8), .segments(HEX4));
+                        // Reset clock
+                    cs <= ns;
+                    end
+                else if (~KEY[1])
+                    begin
+                    inpt[1:0] <= 2'b10;
+                    if(inpt == seq)
+                        score <= score + 1;
+                        // Display pass
+//                        hex_custom1 h1(.hex_digit(4'h4), .segments(HEX3));
+//                        hex_custom1 h2(.hex_digit(4'h1), .segments(HEX2));
+//                        hex_custom1 h3(.hex_digit(4'h5), .segments(HEX1));
+//                        hex_custom1 h4(.hex_digit(4'h5), .segments(HEX0));
+//                        // Blank for other HEX
+//                        hex_custom1 h7(.hex_digit(4'h8), .segments(HEX5));
+//                        hex_custom1 h8(.hex_digit(4'h8), .segments(HEX4));
+                        // Increment clock
+                    else
+                        score <= 8'b00000000;
+                        // Display fail
+//                        hex_custom1 h1(.hex_digit(4'h0), .segments(HEX3));
+//                        hex_custom1 h2(.hex_digit(4'h1), .segments(HEX2));
+//                        hex_custom1 h3(.hex_digit(4'h2), .segments(HEX1));
+//                        hex_custom1 h4(.hex_digit(4'h3), .segments(HEX0));
+//                        // Blank for other HEX
+//                        hex_custom1 h7(.hex_digit(4'h8), .segments(HEX5));
+//                        hex_custom1 h8(.hex_digit(4'h8), .segments(HEX4));
+                        // Reset clock
+                    cs <= ns;
+                    end
+                else if (~KEY[0])
+                    begin
+                    inpt[1:0] <= 2'b11;
+                    if(inpt == seq)
+                        score <= score + 1;
+                        // Display pass
+//                        hex_custom1 h1(.hex_digit(4'h4), .segments(HEX3));
+//                        hex_custom1 h2(.hex_digit(4'h1), .segments(HEX2));
+//                        hex_custom1 h3(.hex_digit(4'h5), .segments(HEX1));
+//                        hex_custom1 h4(.hex_digit(4'h5), .segments(HEX0));
+//                        // Blank for other HEX
+//                        hex_custom1 h7(.hex_digit(4'h8), .segments(HEX5));
+//                        hex_custom1 h8(.hex_digit(4'h8), .segments(HEX4));
+                        // Increment clock
+                    else
+                        score <= 8'b00000000;
+                        // Display fail
+//                        hex_custom1 h1(.hex_digit(4'h0), .segments(HEX3));
+//                        hex_custom1 h2(.hex_digit(4'h1), .segments(HEX2));
+//                        hex_custom1 h3(.hex_digit(4'h2), .segments(HEX1));
+//                        hex_custom1 h4(.hex_digit(4'h3), .segments(HEX0));
+//                        // Blank for other HEX
+//                        hex_custom1 h7(.hex_digit(4'h8), .segments(HEX5));
+//                        hex_custom1 h8(.hex_digit(4'h8), .segments(HEX4));
+                        // Reset clock
+                    cs <= ns;
+                    end
+                end
+            end
+        end // state_FFS
+endmodule
+
+module hex_custom1(hex_digit, segments);
+    input [3:0] hex_digit;
+    output reg [6:0] segments;
+   
+    always @(*)
+        case (hex_digit)
+            4'h0: segments = 7'b000_1110; //F v
+            4'h1: segments = 7'b000_1000; //A v
+            4'h2: segments = 7'b111_1001; //I v
+            4'h3: segments = 7'b100_0111; //L v
+            4'h4: segments = 7'b000_1100; //P v
+            4'h5: segments = 7'b001_0010; //S v
+            4'h6: segments = 7'b100_0000; //O v
+            4'h7: segments = 7'b100_1000; //N v
+            default: segments = 7'h7f;
+        endcase
+endmodule
+
+
+module hex_decoder(hex_digit, segments);
+    input [3:0] hex_digit;
+    output reg [6:0] segments;
+   
+    always @(*)
+        case (hex_digit)
+            4'h0: segments = 7'b100_0000;
+            4'h1: segments = 7'b111_1001;    
+            4'h2: segments = 7'b010_0100;
+            4'h3: segments = 7'b011_0000;
+            4'h4: segments = 7'b001_1001;
+            4'h5: segments = 7'b001_0010;
+            4'h6: segments = 7'b000_0010;
+            4'h7: segments = 7'b111_1000;
+            4'h8: segments = 7'b000_0000;
+            4'h9: segments = 7'b001_1000;
+            4'hA: segments = 7'b000_1000;
+            4'hB: segments = 7'b000_0011;
+            4'hC: segments = 7'b100_0110;
+            4'hD: segments = 7'b010_0001;
+            4'hE: segments = 7'b000_0110;
+            4'hF: segments = 7'b000_1110;   
+            default: segments = 7'h7f;
+        endcase
+endmodule
+
+
+
+
